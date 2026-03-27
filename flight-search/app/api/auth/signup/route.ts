@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase/client';
-import { sendConfirmationEmail } from '@/lib/resend/send-alert-email';
+import { getSupabase } from '@/lib/supabase/client';
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,21 +19,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = getSupabase();
 
-    const { data, error } = await supabase.auth.admin.generateLink({
-      type: 'signup',
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: {
+        data: { full_name: name },
+      },
     });
 
     if (error) throw error;
 
-    const confirmationUrl = data.properties.action_link;
-    await sendConfirmationEmail(email, confirmationUrl);
-
-    return NextResponse.json({ userId: data.user.id });
+    return NextResponse.json({ userId: data.user?.id });
   } catch (err: unknown) {
     console.error('[auth/signup] error:', err);
     const message = err instanceof Error ? err.message : 'Internal server error';

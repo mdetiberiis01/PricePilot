@@ -9,7 +9,7 @@ function getResend() {
 export async function sendConfirmationEmail(to: string, confirmationUrl: string) {
   const resend = getResend();
   await resend.emails.send({
-    from: 'FliteSmart <onboarding@resend.dev>',
+    from: 'FliteSmart <noreply@flitesmart.com>',
     to,
     subject: 'Confirm Your Email - FliteSmart',
     text: `Thanks for signing up for FliteSmart.\n\nTo finish creating your account, please confirm your email address by visiting the link below:\n\n${confirmationUrl}\n\nOnce your email is verified, you will be able to start searching for the best times to fly and uncover the cheapest date ranges for the destinations you want to visit.\n\nFliteSmart is designed for flexible travelers. Just choose where you are leaving from and the region or city you want to explore, and we will help you find the lowest prices across the best travel dates.\n\nIf you did not create a FliteSmart account, you can safely ignore this email.\n\nSee you in the skies,\nThe FliteSmart Team`,
