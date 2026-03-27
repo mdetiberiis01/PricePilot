@@ -95,7 +95,7 @@ export default function AccountPage() {
               <div className="flex items-center justify-between mb-2">
                 <h2 className="font-semibold text-black dark:text-white">Your price alerts</h2>
                 <Link
-                  href="/alerts"
+                  href="/account/add-alert"
                   className="text-sm px-4 py-1.5 rounded-full border border-black/20 dark:border-white/20 text-black/70 dark:text-white/70 hover:border-black/40 dark:hover:border-white/40 hover:text-black dark:hover:text-white transition"
                 >
                   + Add alert
@@ -106,7 +106,7 @@ export default function AccountPage() {
                 <div className="bg-white dark:bg-white/[0.04] border border-black/10 dark:border-white/10 rounded-2xl p-8 text-center">
                   <p className="text-black/40 dark:text-white/40 text-sm mb-4">No alerts yet.</p>
                   <Link
-                    href="/alerts"
+                    href="/account/add-alert"
                     className="inline-block px-6 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-sm font-semibold hover:bg-black/80 dark:hover:bg-white/80 transition"
                   >
                     Set your first alert

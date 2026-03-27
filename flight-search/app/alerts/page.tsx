@@ -178,7 +178,6 @@ export default function AlertsPage() {
                       }}
                     />
                     <div>
-                      <label className="block text-sm text-black/60 dark:text-white/60 mb-1">To</label>
                       <DestinationInput
                         value={destination}
                         onChange={(val) => setDestination(val)}
