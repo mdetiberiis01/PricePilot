@@ -6,7 +6,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'FlightFlex — Find Flexible Flight Deals',
+  title: 'FliteSmart — Find Flexible Flight Deals',
   description:
     'Search flights by season or anytime. See historical prices and real deal ratings.',
 };

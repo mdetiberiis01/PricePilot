@@ -32,7 +32,7 @@ export default function HowItWorksPage() {
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between pr-24">
           <div className="flex items-center gap-10">
             <Link href="/" className="font-bold text-lg tracking-tight text-black dark:text-white">
-              ✈ FlightFlex
+              ✈ FliteSmart
             </Link>
             <nav className="hidden md:flex items-center gap-7 text-sm text-black/55 dark:text-white/55">
               <Link href="/" className="hover:text-black dark:hover:text-white transition">Flights</Link>
@@ -53,7 +53,7 @@ export default function HowItWorksPage() {
       <section className="bg-gradient-to-b from-sky-50 via-sky-50/40 to-white dark:from-slate-900 dark:via-slate-900/40 dark:to-[#0a0a0a] pt-16 pb-20 px-6">
         <div className="max-w-2xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-4 tracking-tight">
-            How FlightFlex works
+            How FliteSmart works
           </h1>
           <p className="text-black/50 dark:text-white/50 text-lg">
             Four features that help you find cheaper flights, faster.
@@ -97,7 +97,7 @@ export default function HowItWorksPage() {
 
       {/* Footer */}
       <footer className="border-t border-black/8 dark:border-white/8 py-8 px-6 text-center text-xs text-black/35 dark:text-white/35">
-        © {new Date().getFullYear()} FlightFlex · Prices sourced via Kiwi.com · Not affiliated with any airline
+        © {new Date().getFullYear()} FliteSmart · Prices sourced via Kiwi.com · Not affiliated with any airline
       </footer>
 
     </div>

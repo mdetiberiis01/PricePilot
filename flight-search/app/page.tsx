@@ -10,7 +10,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between pr-24">
           <div className="flex items-center gap-10">
             <span className="font-bold text-lg tracking-tight text-black dark:text-white">
-              ✈ FlightFlex
+              ✈ FliteSmart
             </span>
             <nav className="hidden md:flex items-center gap-7 text-sm text-black/55 dark:text-white/55">
               <Link href="/" className="hover:text-black dark:hover:text-white transition">Flights</Link>
@@ -49,7 +49,7 @@ export default function Home() {
       <section className="bg-white dark:bg-[#0a0a0a] py-20 px-6 flex-1">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-sm font-semibold uppercase tracking-widest text-black/40 dark:text-white/40 mb-10 text-center">
-            Why FlightFlex
+            Why FliteSmart
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -86,7 +86,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-black/8 dark:border-white/8 py-8 px-6 text-center text-xs text-black/35 dark:text-white/35">
-        © {new Date().getFullYear()} FlightFlex · Prices sourced via Kiwi.com · Not affiliated with any airline
+        © {new Date().getFullYear()} FliteSmart · Prices sourced via Kiwi.com · Not affiliated with any airline
       </footer>
 
     </div>

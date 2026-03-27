@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
             alert.origin_name || alert.origin,
             best.destinationName || alert.destination,
             best.price,
-            best.bookingUrl || 'https://flightflex.app',
+            best.bookingUrl || 'https://flitesmart.com',
           );
           alerted = true;
         } else if (
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
             best.destinationName || alert.destination,
             best.price,
             best.dealPercent,
-            best.bookingUrl || 'https://flightflex.app',
+            best.bookingUrl || 'https://flitesmart.com',
           );
           alerted = true;
         }

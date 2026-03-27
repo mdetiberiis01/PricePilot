@@ -9,18 +9,18 @@ function getResend() {
 export async function sendConfirmationEmail(to: string, confirmationUrl: string) {
   const resend = getResend();
   await resend.emails.send({
-    from: 'FlightFlex <alerts@flightflex.app>',
+    from: 'FliteSmart <onboarding@resend.dev>',
     to,
-    subject: 'Confirm Your Email - FlightFlex',
-    text: `Thanks for signing up for FlightFlex.\n\nTo finish creating your account, please confirm your email address by visiting the link below:\n\n${confirmationUrl}\n\nOnce your email is verified, you will be able to start searching for the best times to fly and uncover the cheapest date ranges for the destinations you want to visit.\n\nFlightFlex is designed for flexible travelers. Just choose where you are leaving from and the region or city you want to explore, and we will help you find the lowest prices across the best travel dates.\n\nIf you did not create a FlightFlex account, you can safely ignore this email.\n\nSee you in the skies,\nThe FlightFlex Team`,
+    subject: 'Confirm Your Email - FliteSmart',
+    text: `Thanks for signing up for FliteSmart.\n\nTo finish creating your account, please confirm your email address by visiting the link below:\n\n${confirmationUrl}\n\nOnce your email is verified, you will be able to start searching for the best times to fly and uncover the cheapest date ranges for the destinations you want to visit.\n\nFliteSmart is designed for flexible travelers. Just choose where you are leaving from and the region or city you want to explore, and we will help you find the lowest prices across the best travel dates.\n\nIf you did not create a FliteSmart account, you can safely ignore this email.\n\nSee you in the skies,\nThe FliteSmart Team`,
     html: `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color: #111; padding: 32px 24px;">
         <div style="margin-bottom: 32px;">
-          <span style="font-size: 18px; font-weight: 700; letter-spacing: -0.5px;">✈ FlightFlex</span>
+          <span style="font-size: 18px; font-weight: 700; letter-spacing: -0.5px;">✈ FliteSmart</span>
         </div>
         <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 12px;">Confirm your email address</h1>
         <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 28px;">
-          Thanks for signing up for FlightFlex. To finish creating your account, please confirm your email address by clicking the button below.
+          Thanks for signing up for FliteSmart. To finish creating your account, please confirm your email address by clicking the button below.
         </p>
         <a href="${confirmationUrl}" style="display: inline-block; padding: 14px 28px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin-bottom: 32px;">
           Confirm my email
@@ -29,15 +29,15 @@ export async function sendConfirmationEmail(to: string, confirmationUrl: string)
           Once your email is verified, you will be able to start searching for the best times to fly and uncover the cheapest date ranges for the destinations you want to visit.
         </p>
         <p style="color: #555; font-size: 14px; line-height: 1.6; margin: 0 0 32px;">
-          FlightFlex is designed for flexible travelers. Just choose where you are leaving from and the region or city you want to explore, and we will help you find the lowest prices across the best travel dates.
+          FliteSmart is designed for flexible travelers. Just choose where you are leaving from and the region or city you want to explore, and we will help you find the lowest prices across the best travel dates.
         </p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 0 0 24px;" />
         <p style="color: #999; font-size: 13px; line-height: 1.5; margin: 0 0 16px;">
-          If you did not create a FlightFlex account, you can safely ignore this email.
+          If you did not create a FliteSmart account, you can safely ignore this email.
         </p>
         <p style="color: #555; font-size: 14px; margin: 0;">
           See you in the skies,<br />
-          <strong>The FlightFlex Team</strong>
+          <strong>The FliteSmart Team</strong>
         </p>
       </div>
     `,
@@ -53,10 +53,10 @@ export async function sendPriceAlertEmail(
 ) {
   const resend = getResend();
   await resend.emails.send({
-    from: 'FlightFlex <alerts@flightflex.app>',
+    from: 'FliteSmart <alerts@flitesmart.com>',
     to,
     subject: `Price drop: ${origin} → ${destination} now $${price}`,
-    text: `A price alert for your route!\n\nRoute: ${origin} → ${destination}\nCurrent price: $${price}\n\nBook now: ${bookingUrl}\n\n— FlightFlex`,
+    text: `A price alert for your route!\n\nRoute: ${origin} → ${destination}\nCurrent price: $${price}\n\nBook now: ${bookingUrl}\n\n— FliteSmart`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #111;">
         <h2 style="margin-bottom: 4px;">Price drop alert</h2>
@@ -72,7 +72,7 @@ export async function sendPriceAlertEmail(
           </tr>
         </table>
         <a href="${bookingUrl}" style="display: inline-block; padding: 12px 24px; background: #111; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Book this flight</a>
-        <p style="font-size: 12px; color: #999; margin-top: 32px;">— FlightFlex</p>
+        <p style="font-size: 12px; color: #999; margin-top: 32px;">— FliteSmart</p>
       </div>
     `,
   });
@@ -88,10 +88,10 @@ export async function sendDealAlertEmail(
 ) {
   const resend = getResend();
   await resend.emails.send({
-    from: 'FlightFlex <alerts@flightflex.app>',
+    from: 'FliteSmart <alerts@flitesmart.com>',
     to,
     subject: `Flash deal: ${origin} → ${destination} — ${pctBelowAvg}% below average`,
-    text: `Unusually cheap deal detected!\n\nRoute: ${origin} → ${destination}\nPrice: $${price} (${pctBelowAvg}% below 12-month average)\n\nBook now: ${bookingUrl}\n\n— FlightFlex`,
+    text: `Unusually cheap deal detected!\n\nRoute: ${origin} → ${destination}\nPrice: $${price} (${pctBelowAvg}% below 12-month average)\n\nBook now: ${bookingUrl}\n\n— FliteSmart`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #111;">
         <h2 style="margin-bottom: 4px;">Flash deal detected ⚡</h2>
@@ -111,7 +111,7 @@ export async function sendDealAlertEmail(
           </tr>
         </table>
         <a href="${bookingUrl}" style="display: inline-block; padding: 12px 24px; background: #111; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Book this flight</a>
-        <p style="font-size: 12px; color: #999; margin-top: 32px;">— FlightFlex</p>
+        <p style="font-size: 12px; color: #999; margin-top: 32px;">— FliteSmart</p>
       </div>
     `,
   });
