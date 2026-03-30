@@ -6,6 +6,8 @@ import { getDateRanges, generateSearchDates, DateRange } from './date-ranges';
 import { mergeAndDeduplicateResults } from './result-merger';
 import { searchFlights } from '../serpapi/flight-search';
 import { searchFlightsTequila } from '../tequila/flight-search';
+import { getFlightOffers } from '../amadeus/flight-offers';
+import { AmadeusFlightOffer } from '@/types/amadeus';
 import { savePriceSnapshots, updatePriceSummary } from '../supabase/price-cache';
 import { dealRating } from '../utils/deal-rating';
 
@@ -34,7 +36,6 @@ const DEMO_DESTINATIONS = [
   // Oceania
   { iataCode: 'SYD', city: 'Sydney',         country: 'Australia',      basePrice: 1100, airline: 'Qantas',            airlineCode: 'QF', stops: 1, duration: 'PT21H' },
 
-  /* --- FULL CITY LIST (uncomment for production) ---
   // Western Europe (extended)
   { iataCode: 'MAD', city: 'Madrid',         country: 'Spain',          basePrice: 400,  airline: 'Iberia',            airlineCode: 'IB', stops: 0, duration: 'PT8H' },
   { iataCode: 'BCN', city: 'Barcelona',      country: 'Spain',          basePrice: 415,  airline: 'Iberia',            airlineCode: 'IB', stops: 0, duration: 'PT8H15M' },
@@ -114,7 +115,16 @@ const DEMO_DESTINATIONS = [
   { iataCode: 'BNE', city: 'Brisbane',       country: 'Australia',      basePrice: 1090, airline: 'Qantas',            airlineCode: 'QF', stops: 1, duration: 'PT22H' },
   { iataCode: 'AKL', city: 'Auckland',       country: 'New Zealand',    basePrice: 1150, airline: 'Air New Zealand',   airlineCode: 'NZ', stops: 1, duration: 'PT22H30M' },
   { iataCode: 'NAN', city: 'Nadi',           country: 'Fiji',           basePrice: 1050, airline: 'Fiji Airways',      airlineCode: 'FJ', stops: 1, duration: 'PT20H' },
-  --- END FULL CITY LIST --- */
+  // Central Asia
+  { iataCode: 'TAS', city: 'Tashkent',       country: 'Uzbekistan',     basePrice: 960,  airline: 'Uzbekistan Airways',airlineCode: 'HY', stops: 1, duration: 'PT14H30M' },
+  { iataCode: 'ALA', city: 'Almaty',         country: 'Kazakhstan',     basePrice: 990,  airline: 'Air Astana',        airlineCode: 'KC', stops: 1, duration: 'PT15H' },
+  { iataCode: 'FRU', city: 'Bishkek',        country: 'Kyrgyzstan',     basePrice: 1010, airline: 'Turkish Airlines',  airlineCode: 'TK', stops: 1, duration: 'PT15H30M' },
+  { iataCode: 'DYU', city: 'Dushanbe',       country: 'Tajikistan',     basePrice: 1040, airline: 'Turkish Airlines',  airlineCode: 'TK', stops: 1, duration: 'PT15H45M' },
+  { iataCode: 'ASB', city: 'Ashgabat',       country: 'Turkmenistan',   basePrice: 1080, airline: 'Turkmenistan Airlines',airlineCode: 'T5', stops: 1, duration: 'PT16H' },
+  // North Africa (extended)
+  { iataCode: 'TUN', city: 'Tunis',          country: 'Tunisia',        basePrice: 690,  airline: 'Tunisair',          airlineCode: 'TU', stops: 1, duration: 'PT10H' },
+  { iataCode: 'ALG', city: 'Algiers',        country: 'Algeria',        basePrice: 720,  airline: 'Air Algérie',       airlineCode: 'AH', stops: 1, duration: 'PT10H30M' },
+  { iataCode: 'HRG', city: 'Hurghada',       country: 'Egypt',          basePrice: 650,  airline: 'EgyptAir',          airlineCode: 'MS', stops: 1, duration: 'PT12H' },
 ];
 
 function makeDemoHistory(basePrice: number, seed: number): PricePoint[] {
@@ -154,6 +164,10 @@ const DEST_DAY_OFFSETS: Record<string, number> = {
   MBJ: 14, PUJ: 20, SJU: 9,  NAS: 16, AUA: 23, BGI: 11,
   // Oceania
   SYD: 17, MEL: 20, BNE: 9,  AKL: 24, NAN: 14,
+  // Central Asia
+  TAS: 11, ALA: 16, FRU: 22, DYU: 8,  ASB: 19,
+  // North Africa (extended)
+  TUN: 13, ALG: 7,  HRG: 21,
 };
 
 function makeDemoResults(
@@ -247,18 +261,51 @@ async function cachePriceData(
   }
 }
 
+function mapAmadeusOffers(
+  offers: AmadeusFlightOffer[],
+  fallbackDeparture: string,
+  fallbackReturn?: string
+): import('../serpapi/flight-search').FlightResult[] {
+  return offers
+    .filter((o) => parseFloat(o.price.total) > 0)
+    .map((o) => {
+      const outbound = o.itineraries[0];
+      const airlineCode = o.validatingAirlineCodes[0] ?? '';
+      const depAt = outbound?.segments[0]?.departure?.at ?? '';
+      const depDate = depAt ? depAt.split('T')[0] : fallbackDeparture;
+      const inbound = o.itineraries[1];
+      const retAt = inbound?.segments[0]?.departure?.at ?? '';
+      const retDate = retAt ? retAt.split('T')[0] : fallbackReturn;
+      return {
+        price: parseFloat(o.price.total),
+        airline: airlineCode,
+        airlineCode,
+        stops: Math.max(0, (outbound?.segments?.length ?? 1) - 1),
+        duration: outbound?.duration ?? 'PT0H',
+        departureDate: depDate,
+        returnDate: retDate,
+      };
+    })
+    .sort((a, b) => a.price - b.price);
+}
+
 async function searchFlightsWithFallback(
   origin: string,
   destination: string,
   departureDate: string,
   returnDate?: string
-): Promise<{ flights: import('../serpapi/flight-search').FlightResult[]; pricePoints: PricePoint[]; dataSource: 'tequila' | 'serpapi' }> {
+): Promise<{ flights: import('../serpapi/flight-search').FlightResult[]; pricePoints: PricePoint[]; dataSource: 'tequila' | 'serpapi' | 'amadeus' }> {
   const tequila = await searchFlightsTequila(origin, destination, departureDate, returnDate);
   if (tequila.flights.length > 0) {
     return { ...tequila, dataSource: 'tequila' };
   }
   const serp = await searchFlights(origin, destination, departureDate, returnDate);
-  return { ...serp, dataSource: 'serpapi' };
+  if (serp.flights.length > 0) {
+    return { ...serp, dataSource: 'serpapi' };
+  }
+  const amadeusOffers = await getFlightOffers(origin, destination, departureDate, returnDate);
+  const amadeusFlights = mapAmadeusOffers(amadeusOffers, departureDate, returnDate);
+  return { flights: amadeusFlights, pricePoints: [], dataSource: 'amadeus' };
 }
 
 function buildResult(
@@ -322,8 +369,8 @@ export async function orchestrateSearch(params: SearchParams): Promise<SearchRes
   if (isMultiDest) {
     // Region/multi-destination: scan one date per month for each destination, push cheapest
     // per search. mergeAndDeduplicateResults keeps one per destination+month for date variety.
-    // TESTING: cap at 4 destinations to conserve API calls. Raise to 12 for production.
-    const targets = destinationCodes.slice(0, 4);
+    // Cap at 6 destinations — airports are ordered by country diversity so first 6 span different cities.
+    const targets = destinationCodes.slice(0, 6);
 
     await Promise.all(
       targets.map(async (destCode) => {

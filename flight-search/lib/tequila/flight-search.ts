@@ -9,6 +9,12 @@ function secondsToIsoDuration(seconds: number): string {
   return m > 0 ? `PT${h}H${m}M` : `PT${h}H`;
 }
 
+function addDays(isoDate: string, days: number): string {
+  const d = new Date(isoDate + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
 function toTequilaDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
@@ -26,11 +32,13 @@ export async function searchFlightsTequila(
     const url = new URL('https://api.tequila.kiwi.com/v2/search');
     url.searchParams.set('fly_from', origin);
     url.searchParams.set('fly_to', destination);
+    const depPlus2 = addDays(departureDate, 2);
     url.searchParams.set('date_from', toTequilaDate(departureDate));
-    url.searchParams.set('date_to', toTequilaDate(departureDate));
+    url.searchParams.set('date_to', toTequilaDate(depPlus2));
     if (returnDate) {
+      const retPlus2 = addDays(returnDate, 2);
       url.searchParams.set('return_from', toTequilaDate(returnDate));
-      url.searchParams.set('return_to', toTequilaDate(returnDate));
+      url.searchParams.set('return_to', toTequilaDate(retPlus2));
     }
     url.searchParams.set('curr', 'USD');
     url.searchParams.set('limit', '5');
@@ -39,7 +47,10 @@ export async function searchFlightsTequila(
     const response = await fetch(url.toString(), {
       headers: { apikey: TEQUILA_API_KEY },
     });
-    if (!response.ok) return { flights: [], pricePoints: [] };
+    if (!response.ok) {
+      console.error('[tequila]', response.status, await response.text().catch(() => ''));
+      return { flights: [], pricePoints: [] };
+    }
 
     const data = await response.json();
     if (!data.data || !Array.isArray(data.data)) return { flights: [], pricePoints: [] };
@@ -69,7 +80,8 @@ export async function searchFlightsTequila(
       .sort((a, b) => a.price - b.price);
 
     return { flights, pricePoints: [] };
-  } catch {
+  } catch (err) {
+    console.error('[tequila]', err);
     return { flights: [], pricePoints: [] };
   }
 }

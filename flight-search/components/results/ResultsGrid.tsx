@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react';
 import { SearchResult } from '@/types/search';
 import { FlightCard } from './FlightCard';
-import { SortFilterBar } from './SortFilterBar';
+import { FlightRow } from './FlightRow';
+import { SortFilterBar, ViewMode } from './SortFilterBar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type SortKey = 'price' | 'date' | 'deal';
@@ -16,6 +17,7 @@ interface Props {
 export function ResultsGrid({ results, isLoading }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>('price');
   const [filterStops, setFilterStops] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('tiles');
 
   const displayResults = useMemo(() => {
     let filtered = results;
@@ -41,10 +43,10 @@ export function ResultsGrid({ results, isLoading }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="glass-card rounded-2xl p-5 space-y-3">
-              <Skeleton className="h-6 w-3/4 bg-white/10" />
-              <Skeleton className="h-4 w-1/2 bg-white/10" />
-              <Skeleton className="h-8 w-full bg-white/10" />
-              <Skeleton className="h-12 w-full bg-white/10" />
+              <Skeleton className="h-6 w-3/4 bg-black/8 dark:bg-white/10" />
+              <Skeleton className="h-4 w-1/2 bg-black/8 dark:bg-white/10" />
+              <Skeleton className="h-8 w-full bg-black/8 dark:bg-white/10" />
+              <Skeleton className="h-12 w-full bg-black/8 dark:bg-white/10" />
             </div>
           ))}
         </div>
@@ -55,9 +57,8 @@ export function ResultsGrid({ results, isLoading }: Props) {
   if (!results.length) {
     return (
       <div className="text-center py-16">
-        <div className="text-5xl mb-4">✈️</div>
-        <h3 className="text-white text-xl font-semibold mb-2">No flights found</h3>
-        <p className="text-white/50">Try a different destination or time period</p>
+        <h3 className="text-black dark:text-white text-xl font-semibold mb-2">No flights found</h3>
+        <p className="text-black/50 dark:text-white/50">Try a different destination or time period</p>
       </div>
     );
   }
@@ -70,16 +71,28 @@ export function ResultsGrid({ results, isLoading }: Props) {
         onSortChange={setSortBy}
         filterStops={filterStops}
         onFilterStopsChange={setFilterStops}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {displayResults.map((result, i) => (
-          <FlightCard key={result.id} result={result} index={i} />
-        ))}
-      </div>
+
+      {viewMode === 'tiles' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {displayResults.map((result, i) => (
+            <FlightCard key={result.id} result={result} index={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {displayResults.map((result, i) => (
+            <FlightRow key={result.id} result={result} index={i} />
+          ))}
+        </div>
+      )}
+
       {filterStops !== null && displayResults.length === 0 && (
-        <div className="text-center py-8 text-white/50">
+        <div className="text-center py-8 text-black/50 dark:text-white/50">
           No flights match this filter.{' '}
-          <button onClick={() => setFilterStops(null)} className="text-teal-400 underline">
+          <button onClick={() => setFilterStops(null)} className="text-black dark:text-white underline">
             Clear filter
           </button>
         </div>

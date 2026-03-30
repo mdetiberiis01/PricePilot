@@ -46,10 +46,16 @@ export async function searchFlights(
     url.searchParams.set('api_key', SERPAPI_KEY);
 
     const response = await fetch(url.toString());
-    if (!response.ok) return { flights: [], pricePoints: [] };
+    if (!response.ok) {
+      console.error('[serpapi]', response.status, await response.text().catch(() => ''));
+      return { flights: [], pricePoints: [] };
+    }
 
     const data: SerpApiFlightsResponse = await response.json();
-    if (data.error) return { flights: [], pricePoints: [] };
+    if (data.error) {
+      console.error('[serpapi]', data.error);
+      return { flights: [], pricePoints: [] };
+    }
 
     const itineraries = [...(data.best_flights ?? []), ...(data.other_flights ?? [])];
     const googleFlightsUrl = data.search_metadata?.google_flights_url;
@@ -84,7 +90,8 @@ export async function searchFlights(
     }
 
     return { flights, pricePoints };
-  } catch {
+  } catch (err) {
+    console.error('[serpapi]', err);
     return { flights: [], pricePoints: [] };
   }
 }

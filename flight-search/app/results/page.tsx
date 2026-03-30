@@ -19,7 +19,8 @@ function ResultsContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showMap, setShowMap] = useState(false);
+  const [showMap, setShowMap] = useState(true);
+  const [dismissedDemoBanner, setDismissedDemoBanner] = useState(false);
 
   const origin = searchParams.get('origin') || '';
   const originName = searchParams.get('originName') || origin;
@@ -111,6 +112,20 @@ function ResultsContent() {
           >
             <DestinationMap results={results} origin={origin} />
           </motion.div>
+        )}
+
+        {/* Demo data banner */}
+        {!isLoading && !error && !dismissedDemoBanner && results.length > 0 && results.every((r) => r.dataSource === 'demo') && (
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-yellow-400/40 bg-yellow-400/10 px-4 py-3 text-sm text-yellow-700 dark:text-yellow-300">
+            <span>Showing sample prices — configure API keys to see live fares.</span>
+            <button
+              onClick={() => setDismissedDemoBanner(true)}
+              className="shrink-0 text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-100 transition"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
         )}
 
         {/* Results header */}
