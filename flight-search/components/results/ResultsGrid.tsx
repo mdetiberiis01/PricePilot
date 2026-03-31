@@ -17,7 +17,7 @@ interface Props {
 export function ResultsGrid({ results, isLoading }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>('price');
   const [filterStops, setFilterStops] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('tiles');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const displayResults = useMemo(() => {
     let filtered = results;
