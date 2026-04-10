@@ -27,9 +27,14 @@ export function FlightRow({ result, index }: Props) {
     if (!url) {
       const marker = process.env.NEXT_PUBLIC_TRAVELPAYOUTS_MARKER || '';
       const markerParam = marker ? `?marker=${marker}` : '';
-      const dep = result.departureDate.replace(/-/g, '');
-      const ret = result.returnDate ? result.returnDate.replace(/-/g, '') : '1';
-      url = `https://www.aviasales.com/search/${result.origin}${dep}${result.destination}${ret}1${markerParam}`;
+      const [, depM, depD] = (result.departureDate || '').split('-');
+      const dep = (depM || '') + (depD || '');
+      let ret = '1';
+      if (result.returnDate) {
+        const [, retM, retD] = result.returnDate.split('-');
+        ret = (retM || '') + (retD || '');
+      }
+      url = `https://www.aviasales.com/search/${result.origin || ''}${dep}${result.destination || ''}${ret}1${markerParam}`;
     }
     window.open(url, '_blank', 'noopener,noreferrer');
   }

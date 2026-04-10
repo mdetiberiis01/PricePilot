@@ -14,6 +14,8 @@ export interface FlightResult {
   returnDate?: string;
   bookingUrl?: string;
   bookingToken?: string;
+  origin?: string;
+  destination?: string;
 }
 
 function minutesToIsoDuration(minutes: number): string {

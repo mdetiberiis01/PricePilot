@@ -82,9 +82,12 @@ export async function searchFlightsAviasales(
         const retDate = item.return_at ? item.return_at.split('T')[0] : returnDate;
         const airlineCode = item.airline ?? '';
         // Aviasales links are relative paths — prepend base and append affiliate marker
-        const bookingUrl = item.link
-          ? `https://www.aviasales.com${item.link}${TRAVELPAYOUTS_MARKER ? `&marker=${TRAVELPAYOUTS_MARKER}` : ''}`
-          : undefined;
+        let bookingUrl: string | undefined;
+        if (item.link) {
+          const base = `https://www.aviasales.com${item.link}`;
+          const sep = base.includes('?') ? '&' : '?';
+          bookingUrl = TRAVELPAYOUTS_MARKER ? `${base}${sep}marker=${TRAVELPAYOUTS_MARKER}` : base;
+        }
 
         return {
           price: item.price,
@@ -95,6 +98,8 @@ export async function searchFlightsAviasales(
           departureDate: depDate,
           returnDate: retDate,
           bookingUrl,
+          origin: item.origin_airport || item.origin,
+          destination: item.destination_airport || item.destination,
         };
       })
       .sort((a, b) => a.price - b.price);
