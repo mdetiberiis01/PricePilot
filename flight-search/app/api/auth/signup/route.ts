@@ -3,7 +3,7 @@ import { getSupabase } from '@/lib/supabase/client';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, name } = await req.json();
+    const { email, password, name, homeAirport, homeAirportName } = await req.json();
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -25,7 +25,10 @@ export async function POST(req: NextRequest) {
       email,
       password,
       options: {
-        data: { full_name: name },
+        data: {
+          full_name: name,
+          ...(homeAirport ? { home_airport: homeAirport, home_airport_name: homeAirportName ?? homeAirport } : {}),
+        },
       },
     });
 

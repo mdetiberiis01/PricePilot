@@ -70,6 +70,7 @@ export function FlightRow({ result, index }: Props) {
               to={result.destination}
               stops={result.stops}
               layovers={result.layovers}
+              layoverDurations={result.layoverDurations}
               fromDate={formatLegDate(result.departureDate)}
             />
             {result.duration && (
@@ -88,6 +89,7 @@ export function FlightRow({ result, index }: Props) {
                 to={result.origin}
                 stops={result.stops}
                 layovers={result.layovers}
+                layoverDurations={result.layoverDurations}
                 fromDate={formatLegDate(result.returnDate)}
               />
               {result.duration && (

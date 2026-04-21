@@ -8,7 +8,7 @@ import { searchFlights } from '../serpapi/flight-search';
 import { searchFlightsTequila } from '../tequila/flight-search';
 import { getFlightOffers } from '../amadeus/flight-offers';
 import { AmadeusFlightOffer } from '@/types/amadeus';
-import { searchFlightsAviasales } from '../aviasales/flight-search';
+import { searchFlightsAviasales, searchFlightsAviasalesRealtime } from '../aviasales/flight-search';
 import { savePriceSnapshots, updatePriceSummary } from '../supabase/price-cache';
 import { dealRating } from '../utils/deal-rating';
 
@@ -323,7 +323,8 @@ async function searchFlightsWithFallback(
   origin: string,
   destination: string,
   departureDate: string,
-  returnDate?: string
+  returnDate?: string,
+  userIp?: string
 ): Promise<{ flights: import('../serpapi/flight-search').FlightResult[]; pricePoints: PricePoint[]; dataSource: 'tequila' | 'serpapi' | 'amadeus' | 'aviasales' }> {
   const tequila = await searchFlightsTequila(origin, destination, departureDate, returnDate);
   if (tequila.flights.length > 0) {
@@ -338,14 +339,19 @@ async function searchFlightsWithFallback(
   if (amadeusFlights.length > 0) {
     return { flights: amadeusFlights, pricePoints: [], dataSource: 'amadeus' };
   }
-  const aviasales = await searchFlightsAviasales(origin, destination, departureDate, returnDate);
-  return { ...aviasales, dataSource: 'aviasales' };
+  const aviasales = await searchFlightsAviasalesRealtime(origin, destination, departureDate, returnDate, userIp);
+  if (aviasales.flights.length > 0) {
+    return { ...aviasales, dataSource: 'aviasales' };
+  }
+  // Fall back to cached prices if real-time search returns nothing
+  const cached = await searchFlightsAviasales(origin, destination, departureDate, returnDate);
+  return { ...cached, dataSource: 'aviasales' };
 }
 
 function buildResult(
   origin: string,
   destCode: string,
-  flight: { price: number; airline: string; airlineCode: string; stops: number; layovers?: string[]; duration: string; departureDate: string; returnDate?: string; bookingUrl?: string; bookingToken?: string },
+  flight: { price: number; airline: string; airlineCode: string; stops: number; layovers?: string[]; layoverDurations?: number[]; duration: string; departureDate: string; returnDate?: string; bookingUrl?: string; bookingToken?: string },
   pricePoints: PricePoint[],
   dataSource: string = 'serpapi'
 ): SearchResult {
@@ -368,6 +374,7 @@ function buildResult(
     airlineCode: flight.airlineCode,
     stops: flight.stops,
     layovers: flight.layovers,
+    layoverDurations: flight.layoverDurations,
     duration: flight.duration,
     bookingUrl: flight.bookingUrl,
     bookingToken: flight.bookingToken,
@@ -384,7 +391,7 @@ function buildResult(
 // Main
 // ---------------------------------------------------------------------------
 
-export async function orchestrateSearch(params: SearchParams): Promise<SearchResult[]> {
+export async function orchestrateSearch(params: SearchParams, userIp?: string): Promise<SearchResult[]> {
   const { origin, destination, flexibility, customDateStart, customDateEnd, tripDays = 7 } = params;
 
   const destinationCodes = await resolveDestination(destination);
@@ -410,7 +417,7 @@ export async function orchestrateSearch(params: SearchParams): Promise<SearchRes
     await Promise.all(
       targets.map(async (destCode) => {
         const searches = await Promise.all(
-          searchDates.map((dep) => searchFlightsWithFallback(origin, destCode, dep, addDays(dep, tripDays)))
+          searchDates.map((dep) => searchFlightsWithFallback(origin, destCode, dep, addDays(dep, tripDays), userIp))
         );
 
         const combinedPricePoints: PricePoint[] = [];
@@ -432,7 +439,7 @@ export async function orchestrateSearch(params: SearchParams): Promise<SearchRes
     const destCode = destinationCodes[0];
 
     const searches = await Promise.all(
-      searchDates.map((dep) => searchFlightsWithFallback(origin, destCode, dep, addDays(dep, tripDays)))
+      searchDates.map((dep) => searchFlightsWithFallback(origin, destCode, dep, addDays(dep, tripDays), userIp))
     );
 
     for (const { flights, pricePoints, dataSource } of searches) {

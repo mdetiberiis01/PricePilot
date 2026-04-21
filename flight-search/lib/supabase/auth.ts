@@ -44,3 +44,11 @@ export async function getUser() {
   if (error) return null;
   return data.user;
 }
+
+export async function updateHomeAirport(iataCode: string, airportName: string) {
+  const supabase = getSupabase();
+  const { error } = await supabase.auth.updateUser({
+    data: { home_airport: iataCode, home_airport_name: airportName },
+  });
+  if (error) throw error;
+}

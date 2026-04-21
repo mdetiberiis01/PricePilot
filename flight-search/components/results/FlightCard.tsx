@@ -30,17 +30,18 @@ interface LegRowProps {
   to: string;
   stops: number;
   layovers?: string[];
+  layoverDurations?: number[];
   duration: string;
 }
 
-function LegRow({ airlineCode, date, from, to, stops, layovers, duration }: LegRowProps) {
+function LegRow({ airlineCode, date, from, to, stops, layovers, layoverDurations, duration }: LegRowProps) {
   return (
     <div className="flex items-center gap-3 py-2.5">
       {/* Airline logo */}
       <AirlineLogo code={airlineCode} size={32} />
 
       {/* Route bar with date at origin */}
-      <RouteBar from={from} to={to} stops={stops} layovers={layovers} fromDate={date} />
+      <RouteBar from={from} to={to} stops={stops} layovers={layovers} layoverDurations={layoverDurations} fromDate={date} />
 
       {/* Duration */}
       {duration && (
@@ -104,6 +105,7 @@ export function FlightCard({ result, index }: Props) {
           to={result.destination}
           stops={result.stops}
           layovers={result.layovers}
+          layoverDurations={result.layoverDurations}
           duration={result.duration}
         />
 
@@ -116,6 +118,7 @@ export function FlightCard({ result, index }: Props) {
             to={result.origin}
             stops={result.stops}
             layovers={result.layovers}
+            layoverDurations={result.layoverDurations}
             duration={result.duration}
           />
         )}

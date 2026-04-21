@@ -6,9 +6,12 @@ import { Nav } from '@/components/ui/Nav';
 import { SearchForm } from '@/components/search/SearchForm';
 import { TrendingDestinations, TrendingDest } from '@/components/landing/TrendingDestinations';
 import { useSearchForm } from '@/hooks/useSearchForm';
+import { useAuth } from '@/lib/auth-context';
 
 export default function Home() {
   const hook = useSearchForm();
+  const { user } = useAuth();
+  const homeAirport = user?.user_metadata?.home_airport as string | undefined;
   const router = useRouter();
   const [needsOrigin, setNeedsOrigin] = useState(false);
 
@@ -74,7 +77,7 @@ export default function Home() {
               )}
               <SearchForm hook={hook} />
             </div>
-            <TrendingDestinations onSelect={handleTrendingSelect} />
+            <TrendingDestinations onSelect={handleTrendingSelect} homeAirport={homeAirport} />
           </div>
 
         </div>

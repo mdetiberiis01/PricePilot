@@ -13,7 +13,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const results = await orchestrateSearch(body);
+    const userIp =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      request.headers.get('x-real-ip') ??
+      '127.0.0.1';
+    const results = await orchestrateSearch(body, userIp);
     return NextResponse.json({ results });
   } catch (error) {
     console.error('Search error:', error);

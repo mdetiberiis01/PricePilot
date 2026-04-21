@@ -1,15 +1,22 @@
 'use client';
 
+function formatStopDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
 interface Props {
   from: string;
   to: string;
   stops: number;
   layovers?: string[];
+  layoverDurations?: number[];
   fromDate?: string;
   toDate?: string;
 }
 
-export function RouteBar({ from, to, stops, layovers, fromDate, toDate }: Props) {
+export function RouteBar({ from, to, stops, layovers, layoverDurations, fromDate, toDate }: Props) {
   const allDots: (string | null)[] =
     layovers && layovers.length > 0 ? layovers : Array(stops).fill(null);
 
@@ -39,13 +46,14 @@ export function RouteBar({ from, to, stops, layovers, fromDate, toDate }: Props)
                 {/* Always reserve the same height as the date label above */}
                 <span className="h-[11px] block" />
                 <span className="w-[6px] h-[6px] rounded-full bg-black/25 dark:bg-white/40 block" />
-                {label ? (
+                {label && (
                   <span className="text-[9px] leading-none text-black/45 dark:text-white/45 font-medium whitespace-nowrap">
                     {label}
                   </span>
-                ) : (
-                  <span className="hidden sm:block text-[9px] leading-none text-black/45 dark:text-white/45 font-medium">
-                    Stop
+                )}
+                {layoverDurations?.[i] != null && (
+                  <span className="text-[8px] leading-none text-black/30 dark:text-white/30 whitespace-nowrap tabular-nums">
+                    {formatStopDuration(layoverDurations[i])}
                   </span>
                 )}
               </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { signOut } from '@/lib/supabase/auth';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -11,17 +11,39 @@ interface NavProps {
   activePage?: 'flights' | 'alerts' | 'how-it-works';
 }
 
+const DROPDOWN_ITEMS = [
+  { label: 'My Trips', href: '#' },
+  { label: 'Price Alerts', href: '/alerts' },
+  { label: 'Saved Flights', href: '#' },
+  { label: 'Notifications', href: '#' },
+  { label: 'Account Info', href: '/account' },
+];
+
 export function Nav({ activePage }: NavProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const name = user?.user_metadata?.full_name as string | undefined;
 
   async function handleSignOut() {
     await signOut();
     router.push('/');
     setMenuOpen(false);
+    setDropdownOpen(false);
   }
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [dropdownOpen]);
 
   const linkClass = 'hover:text-black dark:hover:text-white transition';
   const activeClass = 'text-black dark:text-white';
@@ -44,17 +66,42 @@ export function Nav({ activePage }: NavProps) {
         {/* Desktop auth */}
         <div className="hidden md:flex items-center gap-3 text-sm">
           {user ? (
-            <>
-              <Link href="/account" className="text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition">
-                {name || user.email}
-              </Link>
+            <div className="relative" ref={dropdownRef}>
               <button
-                onClick={handleSignOut}
-                className="px-4 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-sm font-medium hover:bg-black/80 dark:hover:bg-white/80 transition"
+                onClick={() => setDropdownOpen((o) => !o)}
+                className="flex items-center gap-1.5 text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition font-medium"
               >
-                Sign out
+                {name || user.email}
+                <svg
+                  width="12" height="12" viewBox="0 0 12 12" fill="currentColor"
+                  className={`opacity-50 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                >
+                  <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
               </button>
-            </>
+
+              {dropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-[#1a1a1a] border border-black/10 dark:border-white/10 rounded-xl shadow-lg shadow-black/10 dark:shadow-black/40 overflow-hidden z-50">
+                  {DROPDOWN_ITEMS.map((item) => (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-black/70 dark:text-white/70 hover:bg-black/5 dark:hover:bg-white/8 hover:text-black dark:hover:text-white transition"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <div className="border-t border-black/8 dark:border-white/10" />
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <Link href="/login" className={`${dimClass} ${linkClass}`}>Sign in</Link>
@@ -96,11 +143,19 @@ export function Nav({ activePage }: NavProps) {
           <div className="border-t border-black/8 dark:border-white/10 pt-4 flex flex-col gap-3">
             {user ? (
               <>
-                <Link href="/account" onClick={() => setMenuOpen(false)} className="text-black/60 dark:text-white/60">
-                  {name || user.email}
-                </Link>
-                <button onClick={handleSignOut} className="text-left text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition">
-                  Sign out
+                <p className="text-black/40 dark:text-white/40 text-xs font-medium">{name || user.email}</p>
+                {DROPDOWN_ITEMS.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={`${dimClass} ${linkClass}`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <button onClick={handleSignOut} className="text-left text-red-500 hover:text-red-600 transition">
+                  Log Out
                 </button>
               </>
             ) : (

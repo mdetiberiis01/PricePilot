@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SearchParams } from '@/types/search';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 
 export function useSearchForm() {
   const router = useRouter();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,6 +22,17 @@ export function useSearchForm() {
     cabinClass: 'economy',
     maxBudget: 0,
   });
+
+  // Auto-fill origin from home airport when user loads (only if origin is still empty)
+  useEffect(() => {
+    const homeAirport = user?.user_metadata?.home_airport as string | undefined;
+    const homeAirportName = user?.user_metadata?.home_airport_name as string | undefined;
+    if (homeAirport) {
+      setForm((prev) =>
+        prev.origin ? prev : { ...prev, origin: homeAirport, originName: homeAirportName ?? homeAirport }
+      );
+    }
+  }, [user]);
 
   function updateField<K extends keyof SearchParams>(key: K, value: SearchParams[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));

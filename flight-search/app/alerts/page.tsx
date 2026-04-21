@@ -24,6 +24,8 @@ export default function AlertsPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [homeAirport, setHomeAirport] = useState('');
+  const [homeAirportName, setHomeAirportName] = useState('');
   const [origin, setOrigin] = useState('');
   const [originName, setOriginName] = useState('');
   const [destination, setDestination] = useState('');
@@ -41,7 +43,7 @@ export default function AlertsPage() {
       const signupRes = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name, homeAirport, homeAirportName }),
       });
       if (!signupRes.ok) {
         const data = await signupRes.json().catch(() => ({}));
@@ -150,6 +152,19 @@ export default function AlertsPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 6 characters"
                     className={inputClass}
+                  />
+                </div>
+
+                {/* Home airport */}
+                <div>
+                  <label className="block text-sm text-black/60 dark:text-white/60 mb-1">Home airport <span className="text-black/30 dark:text-white/30">(optional)</span></label>
+                  <OriginInput
+                    value={homeAirport}
+                    displayName={homeAirportName}
+                    onChange={(code, name) => {
+                      setHomeAirport(code);
+                      setHomeAirportName(name);
+                    }}
                   />
                 </div>
 

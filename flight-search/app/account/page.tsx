@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getUser } from '@/lib/supabase/auth';
+import { getUser, updateHomeAirport } from '@/lib/supabase/auth';
 import { getUserAlerts, deactivateAlert, deleteAlert, reactivateAlert, UserAlert } from '@/lib/supabase/user-alerts';
 import { Nav } from '@/components/ui/Nav';
+import { OriginInput } from '@/components/search/OriginInput';
 import type { User } from '@supabase/supabase-js';
 
 export default function AccountPage() {
@@ -13,6 +14,12 @@ export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null);
   const [alerts, setAlerts] = useState<UserAlert[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Home airport state
+  const [homeAirport, setHomeAirport] = useState('');
+  const [homeAirportName, setHomeAirportName] = useState('');
+  const [savingAirport, setSavingAirport] = useState(false);
+  const [airportSaved, setAirportSaved] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -22,6 +29,13 @@ export default function AccountPage() {
         return;
       }
       setUser(u);
+      // Populate home airport from saved metadata
+      const savedCode = u.user_metadata?.home_airport as string | undefined;
+      const savedName = u.user_metadata?.home_airport_name as string | undefined;
+      if (savedCode) {
+        setHomeAirport(savedCode);
+        setHomeAirportName(savedName ?? savedCode);
+      }
       try {
         const a = await getUserAlerts();
         setAlerts(a);
@@ -33,11 +47,23 @@ export default function AccountPage() {
     load();
   }, [router]);
 
+  async function handleSaveAirport() {
+    if (!homeAirport) return;
+    setSavingAirport(true);
+    try {
+      await updateHomeAirport(homeAirport, homeAirportName || homeAirport);
+      setAirportSaved(true);
+      setTimeout(() => setAirportSaved(false), 2500);
+    } catch {
+      // ignore
+    } finally {
+      setSavingAirport(false);
+    }
+  }
+
   async function handleDeactivate(id: string) {
     await deactivateAlert(id);
-    setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, is_active: false } : a)),
-    );
+    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, is_active: false } : a)));
   }
 
   async function handleDelete(id: string) {
@@ -47,33 +73,89 @@ export default function AccountPage() {
 
   async function handleReactivate(id: string) {
     await reactivateAlert(id);
-    setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, is_active: true } : a)),
-    );
+    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, is_active: true } : a)));
   }
 
   const name = user?.user_metadata?.full_name as string | undefined;
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col">
-
       <Nav />
 
-      {/* Content */}
       <section className="bg-gradient-to-b from-sky-50 via-sky-50/40 to-white dark:from-slate-900 dark:via-slate-900/40 dark:to-[#0a0a0a] pt-16 pb-24 px-4 flex-1">
-        <div className="max-w-2xl mx-auto">
-          <div className="mb-10">
+        <div className="max-w-2xl mx-auto space-y-8">
+
+          {/* ── Account Info ── */}
+          <div>
             <h1 className="text-3xl font-bold text-black dark:text-white mb-1 tracking-tight">
               {name ? `Hey, ${name.split(' ')[0]}` : 'My Account'}
             </h1>
             <p className="text-black/50 dark:text-white/50 text-sm">{user?.email}</p>
           </div>
 
+          <div className="bg-white dark:bg-white/[0.04] border border-black/10 dark:border-white/10 rounded-2xl p-6 space-y-5">
+            <h2 className="font-semibold text-black dark:text-white">Account info</h2>
+
+            {/* Name + email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-black/40 dark:text-white/40 mb-1">Name</p>
+                <p className="text-black dark:text-white font-medium">{name || '—'}</p>
+              </div>
+              <div>
+                <p className="text-black/40 dark:text-white/40 mb-1">Email</p>
+                <p className="text-black dark:text-white font-medium">{user?.email}</p>
+              </div>
+              {memberSince && (
+                <div>
+                  <p className="text-black/40 dark:text-white/40 mb-1">Member since</p>
+                  <p className="text-black dark:text-white font-medium">{memberSince}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-black/40 dark:text-white/40 mb-1">User ID</p>
+                <p className="text-black/50 dark:text-white/50 font-mono text-xs truncate">{user?.id}</p>
+              </div>
+            </div>
+
+            {/* Home airport */}
+            <div className="border-t border-black/8 dark:border-white/8 pt-5">
+              <p className="text-sm font-medium text-black dark:text-white mb-1">Home airport</p>
+              <p className="text-xs text-black/45 dark:text-white/45 mb-3">
+                Used as the default departure airport across FliteSmart.
+              </p>
+              <div className="flex items-end gap-3">
+                <div className="flex-1">
+                  <OriginInput
+                    value={homeAirport}
+                    displayName={homeAirportName}
+                    onChange={(code, name) => {
+                      setHomeAirport(code);
+                      setHomeAirportName(name);
+                      setAirportSaved(false);
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={handleSaveAirport}
+                  disabled={!homeAirport || savingAirport}
+                  className="shrink-0 px-4 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black text-sm font-medium hover:bg-black/80 dark:hover:bg-white/80 disabled:opacity-40 transition"
+                >
+                  {savingAirport ? 'Saving…' : airportSaved ? 'Saved ✓' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Price Alerts ── */}
           {loading ? (
             <div className="text-black/40 dark:text-white/40 text-sm">Loading…</div>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-black dark:text-white">Your price alerts</h2>
                 <Link
                   href="/account/add-alert"
@@ -112,9 +194,7 @@ export default function AccountPage() {
                         {alert.flexibility && alert.flexibility !== 'anytime' && (
                           <> · {alert.flexibility.charAt(0).toUpperCase() + alert.flexibility.slice(1)}</>
                         )}
-                        {alert.trip_days && (
-                          <> · {alert.trip_days}d trip</>
-                        )}
+                        {alert.trip_days && <> · {alert.trip_days}d trip</>}
                         {' · '}Added {new Date(alert.created_at).toLocaleDateString()}
                         {alert.last_alerted_at && (
                           <> · Last alerted {new Date(alert.last_alerted_at).toLocaleDateString()}</>
@@ -170,7 +250,6 @@ export default function AccountPage() {
       <footer className="border-t border-black/8 dark:border-white/8 py-8 px-6 text-center text-xs text-black/35 dark:text-white/35">
         © {new Date().getFullYear()} FliteSmart · Prices sourced via Kiwi.com · Not affiliated with any airline
       </footer>
-
     </div>
   );
 }
